@@ -1,10 +1,11 @@
-import Pagination from "@/app/ui/invoices/pagination";
-import Search from "@/app/ui/search";
-import Table from "@/app/ui/invoices/table";
-import { CreateInvoice } from "@/app/ui/invoices/buttons";
-import { lusitana } from "@/app/ui/fonts";
-import { InvoicesTableSkeleton } from "@/app/ui/skeletons";
 import { Suspense } from "react";
+import prisma from "@/app/lib/prisma";
+import Search from "@/app/ui/search";
+import { lusitana } from "@/app/ui/fonts";
+import Table from "@/app/ui/invoices/table";
+import Pagination from "@/app/ui/invoices/pagination";
+import { CreateInvoice } from "@/app/ui/invoices/buttons";
+import { InvoicesTableSkeleton } from "@/app/ui/skeletons";
 
 export default async function Page({
   searchParams,
@@ -13,6 +14,66 @@ export default async function Page({
 }) {
   const query = searchParams?.query || "";
   const currentPage = Number(searchParams?.page) || 1;
+
+  // Parse query inputs
+  const parsedAmount = parseInt(query, 10);
+  const parsedDate = new Date(query);
+  const isValidDate = !isNaN(parsedDate.getTime());
+
+  const ITEMS_PER_PAGE = 6;
+
+  const invoices = await prisma.invoice.findMany({
+    where: {
+      OR: [
+        {
+          customer: {
+            name: {
+              contains: query,
+              mode: "insensitive",
+            },
+          },
+        },
+        {
+          customer: {
+            email: {
+              contains: query,
+              mode: "insensitive",
+            },
+          },
+        },
+        {
+          amount: {
+            equals: parsedAmount ? parsedAmount : undefined,
+          },
+        },
+        {
+          date: {
+            equals: isValidDate ? parsedDate : undefined,
+          },
+        },
+        {
+          status: {
+            contains: query,
+            mode: "insensitive",
+          },
+        },
+      ],
+    },
+    select: {
+      id: true,
+      amount: true,
+      date: true,
+      status: true,
+      customer: {
+        select: {
+          name: true,
+          email: true,
+        },
+      },
+    },
+  });
+  const totalPages = await Math.ceil(Number(invoices.length) / ITEMS_PER_PAGE);
+
   return (
     <div className="w-full">
       <div className="flex w-full items-center justify-between">
@@ -26,7 +87,7 @@ export default async function Page({
         <Table query={query} currentPage={currentPage} />
       </Suspense>
       <div className="mt-5 flex w-full justify-center">
-        {/* <Pagination totalPages={totalPages} /> */}
+        <Pagination totalPages={totalPages} />
       </div>
     </div>
   );
