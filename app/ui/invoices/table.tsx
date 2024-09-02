@@ -1,8 +1,8 @@
-import Image from 'next/image';
-import { UpdateInvoice, DeleteInvoice } from '@/app/ui/invoices/buttons';
-import InvoiceStatus from '@/app/ui/invoices/status';
-import { formatDateToLocal, formatCurrency } from '@/app/lib/utils';
-import { fetchFilteredInvoices } from '@/app/lib/data';
+import Image from "next/image";
+import prisma from "@/app/lib/prisma";
+import InvoiceStatus from "@/app/ui/invoices/status";
+import { formatDateToLocal, formatCurrency } from "@/app/lib/utils";
+import { UpdateInvoice, DeleteInvoice } from "@/app/ui/invoices/buttons";
 
 export default async function InvoicesTable({
   query,
@@ -11,7 +11,75 @@ export default async function InvoicesTable({
   query: string;
   currentPage: number;
 }) {
-  const invoices = await fetchFilteredInvoices(query, currentPage);
+  const ITEMS_PER_PAGE = 6;
+  const offset = ((currentPage ?? 1) - 1) * ITEMS_PER_PAGE;
+
+  // Parse query inputs
+  const parsedAmount = parseInt(query, 10);
+  const parsedDate = new Date(query);
+  const isValidDate = !isNaN(parsedDate.getTime());
+
+  const invoicesData = await prisma.invoice.findMany({
+    where: {
+      OR: [
+        {
+          customer: {
+            name: {
+              contains: query,
+              mode: "insensitive",
+            },
+          },
+        },
+        {
+          customer: {
+            email: {
+              contains: query,
+              mode: "insensitive",
+            },
+          },
+        },
+        {
+          amount: {
+            equals: parsedAmount ? parsedAmount : undefined,
+          },
+        },
+        {
+          date: {
+            equals: isValidDate ? parsedDate : undefined,
+          },
+        },
+        {
+          status: {
+            contains: query,
+            mode: "insensitive",
+          },
+        },
+      ],
+    },
+    select: {
+      id: true,
+      amount: true,
+      date: true,
+      status: true,
+      customer: {
+        select: {
+          name: true,
+          email: true,
+          imageUrl: true,
+        },
+      },
+    },
+    orderBy: {
+      date: "desc",
+    },
+    skip: offset,
+    take: ITEMS_PER_PAGE,
+  });
+
+  const invoices = await invoicesData.map((invoice) => ({
+    ...invoice,
+    customer: invoice.customer,
+  }));
 
   return (
     <div className="mt-6 flow-root">
@@ -27,15 +95,17 @@ export default async function InvoicesTable({
                   <div>
                     <div className="mb-2 flex items-center">
                       <Image
-                        src={invoice.image_url}
+                        src={invoice.customer.imageUrl}
                         className="mr-2 rounded-full"
                         width={28}
                         height={28}
-                        alt={`${invoice.name}'s profile picture`}
+                        alt={`${invoice.customer.name}'s profile picture`}
                       />
-                      <p>{invoice.name}</p>
+                      <p>{invoice.customer.name}</p>
                     </div>
-                    <p className="text-sm text-gray-500">{invoice.email}</p>
+                    <p className="text-sm text-gray-500">
+                      {invoice.customer.email}
+                    </p>
                   </div>
                   <InvoiceStatus status={invoice.status} />
                 </div>
@@ -44,11 +114,11 @@ export default async function InvoicesTable({
                     <p className="text-xl font-medium">
                       {formatCurrency(invoice.amount)}
                     </p>
-                    <p>{formatDateToLocal(invoice.date)}</p>
+                    <p>{formatDateToLocal(invoice.date.toString())}</p>
                   </div>
                   <div className="flex justify-end gap-2">
-                    <UpdateInvoice id={invoice.id} />
-                    <DeleteInvoice id={invoice.id} />
+                    <UpdateInvoice id={invoice.id.toString()} />
+                    <DeleteInvoice id={invoice.id.toString()} />
                   </div>
                 </div>
               </div>
@@ -86,31 +156,31 @@ export default async function InvoicesTable({
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex items-center gap-3">
                       <Image
-                        src={invoice.image_url}
+                        src={invoice.customer.imageUrl}
                         className="rounded-full"
                         width={28}
                         height={28}
-                        alt={`${invoice.name}'s profile picture`}
+                        alt={`${invoice.customer.name}'s profile picture`}
                       />
-                      <p>{invoice.name}</p>
+                      <p>{invoice.customer.name}</p>
                     </div>
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
-                    {invoice.email}
+                    {invoice.customer.email}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
                     {formatCurrency(invoice.amount)}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
-                    {formatDateToLocal(invoice.date)}
+                    {formatDateToLocal(invoice.date.toString())}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3">
                     <InvoiceStatus status={invoice.status} />
                   </td>
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex justify-end gap-3">
-                      <UpdateInvoice id={invoice.id} />
-                      <DeleteInvoice id={invoice.id} />
+                      <UpdateInvoice id={invoice.id.toString()} />
+                      <DeleteInvoice id={invoice.id.toString()} />
                     </div>
                   </td>
                 </tr>
