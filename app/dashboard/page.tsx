@@ -1,9 +1,9 @@
+import prisma from "@/app/lib/prisma";
+import { lusitana } from "@/app/ui/fonts";
 import { Card } from "@/app/ui/dashboard/cards";
+import { formatCurrency } from "@/app/lib/utils";
 import RevenueChart from "@/app/ui/dashboard/revenue-chart";
 import LatestInvoices from "@/app/ui/dashboard/latest-invoices";
-import { lusitana } from "@/app/ui/fonts";
-import prisma from "../lib/prisma";
-import { formatCurrency } from "../lib/utils";
 
 export default async function Page() {
   const revenue = await prisma.revenue.findMany();
@@ -25,14 +25,31 @@ export default async function Page() {
     },
     take: 5,
   });
-
   const latestInvoices = invoices.map((invoice) => ({
     ...invoice,
     amount: formatCurrency(invoice.amount),
   }));
-  // console.log("REVENUE: ", revenue);
-  // console.log("invoices: ", invoices);
-  // console.log("latestInvoices: ", latestInvoices);
+
+  const [invoiceCount, customerCount, invoiceStatus] = await Promise.all([
+    prisma.invoice.count(),
+    prisma.customer.count(),
+    prisma.invoice.aggregate({
+      _sum: {
+        amount: true,
+      },
+      _count: {
+        id: true,
+      },
+      where: {
+        OR: [{ status: "paid" }, { status: "pending" }],
+      },
+    }),
+  ]);
+
+  const numberOfInvoices = invoiceCount;
+  const numberOfCustomers = customerCount;
+  const totalPaidInvoices = formatCurrency(invoiceStatus._sum.amount || 0);
+  const totalPendingInvoices = formatCurrency(invoiceStatus._sum.amount || 0);
 
   return (
     <main>
@@ -40,14 +57,14 @@ export default async function Page() {
         Dashboard
       </h1>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {/* <Card title="Collected" value={totalPaidInvoices} type="collected" /> */}
-        {/* <Card title="Pending" value={totalPendingInvoices} type="pending" /> */}
-        {/* <Card title="Total Invoices" value={numberOfInvoices} type="invoices" /> */}
-        {/* <Card
+        <Card title="Collected" value={totalPaidInvoices} type="collected" />
+        <Card title="Pending" value={totalPendingInvoices} type="pending" />
+        <Card title="Total Invoices" value={numberOfInvoices} type="invoices" />
+        <Card
           title="Total Customers"
           value={numberOfCustomers}
           type="customers"
-        /> */}
+        />
       </div>
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-4 lg:grid-cols-8">
         <RevenueChart revenue={revenue} />
