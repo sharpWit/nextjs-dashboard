@@ -8,6 +8,32 @@ export const metadata: Metadata = {
   title: "Edit",
 };
 
+export async function generateStaticParams() {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/Invoice?select=*`,
+      {
+        headers: {
+          apikey: `${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+        },
+      }
+    );
+
+    if (!res.ok) {
+      throw new Error("Invoice IDs not fetched");
+    }
+
+    const invoiceIDs = await res.json();
+
+    return invoiceIDs.map((invoice: any) => ({
+      id: invoice.id.toString(),
+    }));
+  } catch (error) {
+    console.error("ERROR:", error);
+  }
+}
+
 export default async function Page({ params }: { params: { id: string } }) {
   const id = params.id ?? {};
 
