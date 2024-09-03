@@ -1,6 +1,6 @@
+import prisma from "@/app/lib/prisma";
 import Form from "@/app/ui/invoices/create-form";
 import Breadcrumbs from "@/app/ui/invoices/breadcrumbs";
-import prisma from "@/app/lib/prisma";
 
 export default async function Page() {
   const customers = await prisma.customer.findMany({
