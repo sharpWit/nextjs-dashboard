@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
+  basePath: "/nextjs-dashboard",
+  output: "export",
   experimental: {
     ppr: "incremental",
   },
