@@ -8,15 +8,15 @@ export const metadata: Metadata = {
   title: "Edit",
 };
 
-export async function generateStaticParams() {
-  const invoiceIDs = await prisma.invoice.findMany({
-    select: { id: true },
-  });
+// export async function generateStaticParams() {
+//   const invoiceIDs = await prisma.invoice.findMany({
+//     select: { id: true },
+//   });
 
-  return invoiceIDs.map((invoice) => ({
-    id: invoice.id.toString(),
-  }));
-}
+//   return invoiceIDs.map((invoice) => ({
+//     id: invoice.id.toString(),
+//   }));
+// }
 
 export default async function Page({ params }: { params: { id: string } }) {
   const id = params.id;
