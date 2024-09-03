@@ -5,7 +5,12 @@ const nextConfig = {
     ppr: "incremental",
   },
   images: {
-    domains: ["https://olszbfyezfjkxvmwqlys.supabase.co"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "olszbfyezfjkxvmwqlys.supabase.co",
+      },
+    ],
   },
 };
 
