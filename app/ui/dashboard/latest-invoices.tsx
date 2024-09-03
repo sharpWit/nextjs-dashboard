@@ -50,7 +50,7 @@ export default async function LatestInvoices() {
               >
                 <div className="flex items-center">
                   <Image
-                    src={invoice.customer.imageUrl}
+                    src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images${invoice.customer.imageUrl}`}
                     alt={`${invoice.customer.name}'s profile picture`}
                     className="mr-4 rounded-full"
                     width={32}

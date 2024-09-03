@@ -95,7 +95,7 @@ export default async function InvoicesTable({
                   <div>
                     <div className="mb-2 flex items-center">
                       <Image
-                        src={invoice.customer.imageUrl}
+                        src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images${invoice.customer.imageUrl}`}
                         className="mr-2 rounded-full"
                         width={28}
                         height={28}
@@ -156,7 +156,7 @@ export default async function InvoicesTable({
                   <td className="whitespace-nowrap py-3 pl-6 pr-3">
                     <div className="flex items-center gap-3">
                       <Image
-                        src={invoice.customer.imageUrl}
+                        src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images${invoice.customer.imageUrl}`}
                         className="rounded-full"
                         width={28}
                         height={28}
