@@ -1,6 +1,12 @@
 import Link from "next/link";
-import { deleteInvoice } from "@/app/lib/actions";
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
+import prisma from "@/app/lib/prisma";
+
+export async function deleteInvoice(id: string) {
+  const invoice = await prisma.invoice.delete({
+    where: { id: Number(id) },
+  });
+}
 
 export function CreateInvoice() {
   return (

@@ -4,6 +4,12 @@ import InvoiceStatus from "@/app/ui/invoices/status";
 import { formatDateToLocal, formatCurrency } from "@/app/lib/utils";
 import { UpdateInvoice, DeleteInvoice } from "@/app/ui/invoices/buttons";
 
+export async function deleteInvoice(id: string) {
+  const invoice = await prisma.invoice.delete({
+    where: { id: Number(id) },
+  });
+}
+
 export default async function InvoicesTable({
   query,
   currentPage,
