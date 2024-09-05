@@ -1,6 +1,7 @@
 import "@/app/ui/global.css";
 import { Metadata } from "next";
 import { inter } from "@/app/ui/fonts";
+import { NextAuthProvider } from "@/app/providers/session-provider";
 
 export const metadata: Metadata = {
   title: {
@@ -18,7 +19,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.className} antialiased`}>{children}</body>
+      <body className={`${inter.className} antialiased`}>
+        <NextAuthProvider>{children}</NextAuthProvider>
+      </body>
     </html>
   );
 }

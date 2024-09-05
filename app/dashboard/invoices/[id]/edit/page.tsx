@@ -11,12 +11,12 @@ export const metadata: Metadata = {
 
 // Next.js will invalidate the cache when a
 // request comes in, at most once every 60 seconds.
-export const revalidate = 3600; // invalidate every hour
+// export const revalidate = 3600; // invalidate every hour
 
 // We'll prerender only the params from `generateStaticParams` at build time.
 // If a request comes in for a path that hasn't been generated,
 // Next.js will server-render the page on-demand.
-export const dynamicParams = true; // or false, to 404 on unknown paths
+// export const dynamicParams = true; // or false, to 404 on unknown paths
 
 const getData = unstable_cache(
   async (id: string) => {
@@ -42,15 +42,18 @@ const getData = unstable_cache(
       }),
     ]);
   },
-  ["data"],
-  { revalidate: 3600, tags: ["data"] }
+  ["invoiceData"], // here we add the userID in the keyParts so Next.js can make separate caches for the different userID's.
+  {
+    tags: ["invoiceData"],
+    revalidate: 3600,
+  }
 );
 
 export const generateStaticParams = async () => {
   const invoices = await prisma.invoice.findMany({
     select: { id: true },
   });
-  return invoices.map((invoice) => ({
+  return invoices.map((invoice: any) => ({
     id: invoice.id.toString(),
   }));
 };
@@ -75,7 +78,7 @@ export default async function Page({ params }: { params: { id: string } }) {
           },
         ]}
       />
-      <Form invoice={invoice} customers={customers ?? []} />
+      <Form invoice={invoice} customers={customers} />
     </main>
   );
 }

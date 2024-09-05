@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { PencilIcon, PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
 import prisma from "@/app/lib/prisma";
+import { SubmitHandler, useForm } from "react-hook-form";
+import { invoicesFormSchema, InvoicesFormSchemaType } from "./form-schema";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 export async function deleteInvoice(id: string) {
   const invoice = await prisma.invoice.delete({
@@ -31,15 +34,32 @@ export function UpdateInvoice({ id }: { id: string }) {
   );
 }
 
-export function DeleteInvoice({ id }: { id: string }) {
-  const deleteInvoiceWithId = deleteInvoice.bind(null, id);
+type TButton = {
+  delete: string;
+};
 
-  return (
-    <form action={deleteInvoiceWithId}>
-      <button className="rounded-md border p-2 hover:bg-gray-100">
-        <span className="sr-only">Delete</span>
-        <TrashIcon className="w-5" />
-      </button>
-    </form>
-  );
+export function DeleteInvoice({ id }: { id: string }) {
+  // const {
+  //   register,
+  //   handleSubmit,
+  //   formState: { errors },
+  // } = useForm<TButton>();
+
+  // const deleteInvoiceWithId = deleteInvoice.bind(null, id);
+
+  const onSubmit: SubmitHandler<TButton> = (data) =>
+    console.log("SUB-E: ", data);
+
+  return <div>test</div>;
 }
+
+// <form onSubmit={handleSubmit(onSubmit)}>
+//   <button
+//     type="submit"
+//     className="rounded-md border p-2 hover:bg-gray-100"
+//     {...register("delete")}
+//   >
+//     <span className="sr-only">Delete</span>
+//     <TrashIcon className="w-5" />
+//   </button>
+// </form>;
