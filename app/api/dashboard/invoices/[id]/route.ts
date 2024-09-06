@@ -51,3 +51,28 @@ export async function PATCH(
     );
   }
 }
+
+export async function DELETE(
+  req: Request,
+  { params: { id } }: { params: { id: string } }
+) {
+  const invoiceId = parseInt(id, 10);
+
+  try {
+    await prisma.invoice.delete({
+      where: { id: invoiceId },
+    });
+
+    // Return success response
+    return NextResponse.json(
+      { message: "Invoice Deleted Successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error deleting invoice:", error);
+    return NextResponse.json(
+      { message: "Internal Server Error" },
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+}
