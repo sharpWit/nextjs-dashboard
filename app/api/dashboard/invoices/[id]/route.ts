@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import prisma from "@/app/lib/prisma";
 
+export const dynamic = "force-static";
+
 export async function PATCH(
   req: Request,
   { params: { id } }: { params: { id: string } }
