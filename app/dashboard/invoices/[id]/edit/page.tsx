@@ -10,8 +10,8 @@ export const metadata: Metadata = {
 
 // Next.js will invalidate the cache when a
 // request comes in, at most once every 60 seconds.
-// export const revalidate = 3600; // invalidate every hour
-// export const dynamic = "force-static";
+export const revalidate = 0; // invalidate every hour
+export const dynamic = "force-dynamic";
 // We'll prerender only the params from `generateStaticParams` at build time.
 // If a request comes in for a path that hasn't been generated,
 // Next.js will server-render the page on-demand.
@@ -41,14 +41,14 @@ const getData = async (id: string) => {
   ]);
 };
 
-export const generateStaticParams = async () => {
-  const invoices = await prisma.invoice.findMany({
-    select: { id: true },
-  });
-  return invoices.map((invoice: any) => ({
-    id: invoice.id.toString(),
-  }));
-};
+// export const generateStaticParams = async () => {
+//   const invoices = await prisma.invoice.findMany({
+//     select: { id: true },
+//   });
+//   return invoices.map((invoice: any) => ({
+//     id: invoice.id.toString(),
+//   }));
+// };
 
 export default async function Page({ params }: { params: { id: string } }) {
   const id = params.id ?? {};
