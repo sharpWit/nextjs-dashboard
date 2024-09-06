@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
+  output: "server",
   experimental: {
     ppr: "incremental",
   },
