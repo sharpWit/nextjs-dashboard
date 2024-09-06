@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import prisma from "@/app/lib/prisma";
-import Form from "@/app/ui/invoices/create-form";
 import Breadcrumbs from "@/app/ui/invoices/breadcrumbs";
+import CreateInvoiceForm from "@/app/ui/invoices/create-form";
 
 export const metadata: Metadata = {
   title: "Create",
@@ -30,7 +30,7 @@ export default async function Page() {
           },
         ]}
       />
-      <Form customers={customers} />
+      <CreateInvoiceForm customers={customers} />
     </main>
   );
 }

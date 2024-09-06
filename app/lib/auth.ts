@@ -52,25 +52,21 @@ export const authOptions: NextAuthOptions = {
 
         if (parsedCredentials.success) {
           const { email, password } = parsedCredentials.data;
-          console.log("{ email, password }: ", { email, password });
 
           const user = await getUser(email);
           if (!user) return null;
 
           const passwordsMatch = await compare(password, user.password);
-          console.log("passwordsMatch: ", passwordsMatch);
 
           if (passwordsMatch) return user;
         }
 
-        console.log("Invalid credentials");
         return null;
       },
     }),
   ],
   callbacks: {
     session: ({ session, token }) => {
-      console.log("Session Callback", { session, token });
       return {
         ...session,
         user: {
@@ -81,7 +77,6 @@ export const authOptions: NextAuthOptions = {
       };
     },
     jwt: ({ token, user }) => {
-      console.log("JWT Callback", { token, user });
       if (user) {
         const u = user as unknown as any;
         return {

@@ -1,54 +1,24 @@
 "use client";
 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   CheckIcon,
   ClockIcon,
   CurrencyDollarIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/outline";
-import Link from "next/link";
-import { Button } from "@/app/ui/button";
-import { CustomerField, InvoiceForm } from "@/app/lib/definitions";
-import { redirect } from "next/navigation";
-import prisma from "@/app/lib/prisma";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { invoicesFormSchema, InvoicesFormSchemaType } from "./form-schema";
+import { Button } from "@/app/ui/button";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { CustomerField, InvoiceForm } from "@/app/lib/definitions";
+import { invoicesFormSchema, InvoicesFormSchemaType } from "./form-schema";
+import { useState } from "react";
 
 const UpdatedFormSchemaType = invoicesFormSchema.omit({
   id: true,
   date: true,
 });
-
-// export async function updateInvoice(
-//   id: number,
-//   prevState: State,
-//   formData: FormData
-// ) {
-//   const validatedFields = UpdateInvoice.safeParse({
-//     customerId: formData.get("customerId"),
-//     amount: formData.get("amount"),
-//     status: formData.get("status"),
-//   });
-
-//   if (!validatedFields.success) {
-//     return {
-//       errors: validatedFields.error.flatten().fieldErrors,
-//       message: "Missing Fields. Failed to Update Invoice.",
-//     };
-//   }
-
-//   const { customerId, amount, status } = validatedFields.data;
-//   const amountInCents = amount * 100;
-//   const date = new Date();
-
-//   const insert = await prisma.invoice.update({
-//     where: { id },
-//     data: { customerId, amount: amountInCents, status, date },
-//   });
-
-//   redirect("/dashboard/invoices");
-// }
 
 export default function EditInvoiceForm({
   invoice,
@@ -57,6 +27,10 @@ export default function EditInvoiceForm({
   invoice: InvoiceForm;
   customers: CustomerField[];
 }) {
+  const router = useRouter();
+  const [serverError, setServerError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
   const {
     register,
     handleSubmit,
@@ -65,12 +39,39 @@ export default function EditInvoiceForm({
     resolver: zodResolver(UpdatedFormSchemaType),
   });
 
-  // const initialState: State = { message: null, errors: {} };
-  // const updateInvoiceWithID = updateInvoice.bind(null, Number(invoice.id));
-  // const [state, formAction] = useActionState(updateInvoiceWithID, initialState);
+  const handleOnSubmit = async (data: InvoicesFormSchemaType) => {
+    try {
+      const response = await fetch(`/api/dashboard/invoices/${invoice.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...data,
+        }),
+      });
 
-  const onSubmit: SubmitHandler<InvoicesFormSchemaType> = (data) =>
-    console.log("SUB-E: ", data);
+      const result = await response.json();
+
+      if (!response.ok) {
+        setServerError(result.message || "Failed to create the invoice.");
+        return;
+      }
+
+      // Success - redirect to the invoices dashboard
+      router.push("/dashboard/invoices");
+    } catch (error) {
+      setServerError("An unexpected error occurred. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onSubmit: SubmitHandler<InvoicesFormSchemaType> = (data) => {
+    setIsLoading(true);
+    setServerError(null); // Reset error state
+    handleOnSubmit(data);
+  };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -83,10 +84,9 @@ export default function EditInvoiceForm({
           <div className="relative">
             <select
               id="customer"
-              // name="customerId"
               className="peer block w-full cursor-pointer rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
               defaultValue={invoice.customerId}
-              aria-describedby="customer-error"
+              aria-invalid={!!errors.customerId}
               {...register("customerId")}
             >
               <option value="" disabled>
@@ -100,13 +100,11 @@ export default function EditInvoiceForm({
             </select>
             <UserCircleIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
           </div>
-          <div id="customer-error" aria-live="polite" aria-atomic="true">
-            {errors?.customerId && (
-              <p className="mt-2 text-sm text-red-500">
-                {errors.customerId.message}
-              </p>
-            )}
-          </div>
+          {errors?.customerId && (
+            <p className="mt-2 text-sm text-red-500">
+              {errors.customerId.message}
+            </p>
+          )}
         </div>
 
         {/* Invoice Amount */}
@@ -118,24 +116,21 @@ export default function EditInvoiceForm({
             <div className="relative">
               <input
                 id="amount"
-                // name="amount"
                 type="number"
                 step="0.01"
                 defaultValue={invoice.amount}
                 placeholder="Enter USD amount"
                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
-                aria-describedby="amount-error"
+                aria-invalid={!!errors.amount}
                 {...register("amount")}
               />
               <CurrencyDollarIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
             </div>
-            <div id="amount-error" aria-live="polite" aria-atomic="true">
-              {errors?.amount && (
-                <p className="mt-2 text-sm text-red-500">
-                  {errors.amount.message}
-                </p>
-              )}
-            </div>
+            {errors?.amount && (
+              <p className="mt-2 text-sm text-red-500">
+                {errors.amount.message}
+              </p>
+            )}
           </div>
         </div>
 
@@ -149,11 +144,11 @@ export default function EditInvoiceForm({
               <div className="flex items-center">
                 <input
                   id="pending"
-                  // name="status"
                   type="radio"
                   value="pending"
                   defaultChecked={invoice.status === "pending"}
                   className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
+                  aria-invalid={!!errors.status}
                   {...register("status")}
                 />
                 <label
@@ -166,12 +161,12 @@ export default function EditInvoiceForm({
               <div className="flex items-center">
                 <input
                   id="paid"
-                  name="status"
                   type="radio"
                   value="paid"
                   defaultChecked={invoice.status === "paid"}
                   className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
-                  aria-describedby="status-error"
+                  aria-invalid={!!errors.status}
+                  {...register("status")}
                 />
                 <label
                   htmlFor="paid"
@@ -181,13 +176,11 @@ export default function EditInvoiceForm({
                 </label>
               </div>
             </div>
-            <div id="status-error" aria-live="polite" aria-atomic="true">
-              {errors?.status && (
-                <p className="mt-2 text-sm text-red-500">
-                  {errors.status.message}
-                </p>
-              )}
-            </div>
+            {errors?.status && (
+              <p className="mt-2 text-sm text-red-500">
+                {errors.status.message}
+              </p>
+            )}
           </div>
         </fieldset>
       </div>
@@ -199,8 +192,15 @@ export default function EditInvoiceForm({
         >
           Cancel
         </Link>
-        <Button type="submit">Edit Invoice</Button>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? "Creating..." : "Create Invoice"}
+        </Button>
       </div>
+
+      {/* Server-side error message */}
+      {serverError && (
+        <div className="mt-4 text-sm text-red-500">{serverError}</div>
+      )}
     </form>
   );
 }

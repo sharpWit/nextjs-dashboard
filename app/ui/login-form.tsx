@@ -3,7 +3,6 @@
 import { z } from "zod";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { SubmitHandler, useForm } from "react-hook-form";
 import {
@@ -35,24 +34,6 @@ export default function LoginForm() {
   } = useForm<SignInSchemaType>({ resolver: zodResolver(signInSchema) });
   const router = useRouter();
 
-  // const { status } = useSession({
-  //   required: true,
-  //   onUnauthenticated() {
-  //     router.push("/api/auth/signin");
-  //   },
-  // });
-
-  // if (status === "loading") {
-  //   return <p>Loading....</p>;
-  // }
-
-  const { data: session } = useSession();
-
-  console.log(session);
-  // if (!session) {
-  //   router.push("/api/auth/signin");
-  // }
-
   const handleAuthenticate = async (formData: SignInSchemaType) => {
     try {
       const result = await signIn("credentials", {
@@ -60,10 +41,9 @@ export default function LoginForm() {
         email: formData.email,
         password: formData.password,
       });
-      console.log("RES: ", result);
 
       if (result?.error) {
-        console.log("Error during login:", result.error);
+        console.error("Error during login:", result.error);
       }
       router.push("/dashboard");
     } catch (error) {
