@@ -8,10 +8,34 @@ export const metadata: Metadata = {
   title: "Edit",
 };
 
+const getData = async (id: string) => {
+  return await Promise.all([
+    await prisma.invoice.findUnique({
+      where: { id: Number(id) },
+      select: {
+        id: true,
+        customerId: true,
+        amount: true,
+        status: true,
+      },
+    }),
+
+    await prisma.customer.findMany({
+      select: {
+        id: true,
+        name: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    }),
+  ]);
+};
+
 // Next.js will invalidate the cache when a
 // request comes in, at most once every 60 seconds.
 // export const revalidate = 3600; // invalidate every hour
-export const dynamic = "force-static";
+// export const dynamic = "force-static";
 // We'll prerender only the params from `generateStaticParams` at build time.
 // If a request comes in for a path that hasn't been generated,
 // Next.js will server-render the page on-demand.
@@ -28,30 +52,6 @@ export const generateStaticParams = async () => {
 
 export default async function Page({ params }: { params: { id: string } }) {
   const id = params.id ?? {};
-
-  const getData = async (id: string) => {
-    return await Promise.all([
-      await prisma.invoice.findUnique({
-        where: { id: Number(id) },
-        select: {
-          id: true,
-          customerId: true,
-          amount: true,
-          status: true,
-        },
-      }),
-
-      await prisma.customer.findMany({
-        select: {
-          id: true,
-          name: true,
-        },
-        orderBy: {
-          name: "asc",
-        },
-      }),
-    ]);
-  };
 
   const [invoice, customers] = await getData(id);
 
